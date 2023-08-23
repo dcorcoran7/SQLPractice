@@ -1,0 +1,145 @@
+DROP DATABASE IF EXISTS dcc9061;
+CREATE DATABASE IF NOT EXISTS dcc9061;
+
+USE dcc9061;
+
+DROP TABLE IF EXISTS dcc9061.zip;
+CREATE TABLE IF NOT EXISTS dcc9061.zip (
+	zip_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    city VARCHAR(20) NOT NULL UNIQUE KEY,
+    state VARCHAR(20) NOT NULL
+    ) ENGINE = InnoDB AUTO_INCREMENT = 5001;
+    
+DROP TABLE IF EXISTS dcc9061.sides;
+CREATE TABLE IF NOT EXISTS dcc9061.sides (
+	side_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    side_name VARCHAR(20) NOT NULL UNIQUE KEY,
+    side_desc VARCHAR(50) NULL UNIQUE KEY,
+    is_sweet BINARY NOT NULL DEFAULT 1,
+    side_cost_of_ingredients DEC(7,2) NOT NULL,
+    side_cost_of_preparation DEC(7,2) NOT NULL
+    ) ENGINE = InnoDB AUTO_INCREMENT = 1001;
+    
+DROP TABLE IF EXISTS dcc9061.menu;
+CREATE TABLE IF NOT EXISTS dcc9061.menu (
+	menu_id INT NOT NULL PRIMARY KEY,
+	menu_name VARCHAR(20) NOT NULL UNIQUE KEY
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.entree;
+CREATE TABLE IF NOT EXISTS dcc9061.entree (
+	entree_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    entre_name VARCHAR(20) NOT NULL UNIQUE KEY,
+    entree_description VARCHAR(50) NOT NULL UNIQUE KEY,
+    entree_cost_of_ingredients DEC(7,2) NOT NULL,
+    entree_cost_of_preparation DEC(7,2) NOT NULL,
+    preferred_wine_type ENUM("white", "red", "sparkling", "port") NOT NULL
+    ) ENGINE = InnoDB AUTO_INCREMENT = 2001;
+    
+DROP TABLE IF EXISTS dcc9061.event_menu;
+CREATE TABLE IF NOT EXISTS dcc9061.event_menu (
+	event_menu_id INT NOT NULL PRIMARY KEY,
+    event_meny_name VARCHAR(20) NOT NULL UNIQUE KEY,
+    event_menu_date DATETIME NOT NULL UNIQUE KEY,
+    event_menu_time TIME NOT NULL,
+    guest_capacity INT NOT NULL,
+    menu_id INT NOT NULL,
+    FOREIGN KEY (menu_id) REFERENCES dcc9061.menu(menu_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.menu_dish;
+CREATE TABLE IF NOT EXISTS dcc9061.menu_dish (
+	menu_dish_id INT NOT NULL PRIMARY KEY,
+    menu_dish_name VARCHAR(20) NOT NULL UNIQUE KEY,
+    menu_dish_description VARCHAR(50) NOT NULL UNIQUE KEY,
+    entree_id INT NOT NULL UNIQUE KEY,
+    FOREIGN KEY (entree_id) REFERENCES dcc9061.entree(entree_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.side_list;
+CREATE TABLE IF NOT EXISTS dcc9061.side_list (
+	side_list_id INT NOT NULL PRIMARY KEY,
+    menu_dish_id INT NOT NULL,
+    FOREIGN KEY (menu_dish_id) REFERENCES dcc9061.menu_dish(menu_dish_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    side_id INT NOT NULL,
+	FOREIGN KEY (side_id) REFERENCES dcc9061.sides(side_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.address;
+CREATE TABLE IF NOT EXISTS dcc9061.address (
+	address_id INT NOT NULL PRIMARY KEY,
+    street VARCHAR(50) NOT NULL UNIQUE KEY,
+    zip_id INT NOT NULL,
+    FOREIGN KEY (zip_id) REFERENCES dcc9061.zip(zip_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+
+DROP TABLE IF EXISTS dcc9061.member;
+CREATE TABLE IF NOT EXISTS dcc9061.member (
+	member_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    m_f_name VARCHAR(20) NOT NULL,
+	m_L_name VARCHAR(20) NOT NULL,
+	m_phone VARCHAR(10) NOT NULL UNIQUE KEY,
+    m_email VARCHAR(20) NOT NULL UNIQUE KEY,
+    IfActive BOOLEAN NOT NULL,
+    address_id INT,
+    FOREIGN KEY (address_id) REFERENCES dcc9061.address(address_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB AUTO_INCREMENT = 3001;
+    
+DROP TABLE IF EXISTS dcc9061.invitation;
+CREATE TABLE IF NOT EXISTS dcc9061.invitation (
+	invitation_id INT NOT NULL PRIMARY KEY,
+    print_time TIME NOT NULL UNIQUE KEY,
+    event_menu_id INT NOT NULL,
+	FOREIGN KEY (event_menu_id) REFERENCES dcc9061.event_menu(event_menu_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	member_id INT NOT NULL UNIQUE KEY,
+	FOREIGN KEY (member_id) REFERENCES dcc9061.member(member_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.rsvp;
+CREATE TABLE IF NOT EXISTS dcc9061.rsvp (
+	RSVP_id INT NOT NULL PRIMARY KEY,
+    invitation_id INT NOT NULL UNIQUE KEY,
+	FOREIGN KEY (invitation_id) REFERENCES dcc9061.invitation(invitation_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    plan_to_attend BOOLEAN NOT NULL,
+	received_time DATETIME NOT NULL
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.rsvp_yes;
+CREATE TABLE IF NOT EXISTS dcc9061.rsvp_yes (
+	rsvp_yes_id INT NOT NULL PRIMARY KEY,
+    rsvp_id INT NOT NULL UNIQUE KEY,
+	FOREIGN KEY (RSVP_id) REFERENCES dcc9061.rsvp(RSVP_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    guest_count INT NOT NULL
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.dish_build;
+CREATE TABLE IF NOT EXISTS dcc9061.dish_build (
+	choice_id INT NOT NULL PRIMARY KEY,
+    menu_id INT NOT NULL,
+	FOREIGN KEY (menu_id) REFERENCES dcc9061.menu(menu_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    menu_dish_id INT NOT NULL,
+	FOREIGN KEY (menu_dish_id) REFERENCES dcc9061.menu_dish(menu_dish_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.attend;
+CREATE TABLE IF NOT EXISTS dcc9061.attend (
+	attend_id INT NOT NULL PRIMARY KEY,
+    bring_guest VARCHAR(20) NOT NULL,
+    invitation_id INT NOT NULL,
+	FOREIGN KEY (invitation_id) REFERENCES dcc9061.invitation(invitation_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    choice_id INT NOT NULL\
+    ,
+	FOREIGN KEY (choice_id) REFERENCES dcc9061.dish_build(choice_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB;
+    
+DROP TABLE IF EXISTS dcc9061.guest;
+CREATE TABLE IF NOT EXISTS dcc9061.guest (
+	guest_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    g_f_name VARCHAR(20) NOT NULL,
+    g_M_name VARCHAR(20) NOT NULL,
+    g_l_name VARCHAR(20) NOT NULL,
+    attend_id INT NOT NULL,
+	FOREIGN KEY (attend_id) REFERENCES dcc9061.attend(attend_id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    choice_id INT NOT NULL,
+	FOREIGN KEY (choice_id) REFERENCES dcc9061.dish_build(choice_id) ON UPDATE RESTRICT ON DELETE RESTRICT
+    ) ENGINE = InnoDB AUTO_INCREMENT = 4001;
